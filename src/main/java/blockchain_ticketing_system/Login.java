@@ -1,20 +1,20 @@
 package blockchain_ticketing_system;
 
-import java.awt.*;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
 
 public class Login extends JFrame implements ActionListener {
 
-    JLabel l1, l2, titleLabel;
-    JTextField t1;
-    JPasswordField t2;
-    JButton b1, b2, forgotButton;
+    private JLabel l1, l2, titleLabel;
+    private JTextField t1;
+    private JPasswordField t2;
+    private JButton b1, b2, forgotButton;
 
     public Login() {
         super("Login");
-        setSize(500, 400); // slightly taller to fit forgot button
+        setSize(500, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); // center frame
         getContentPane().setBackground(Color.WHITE);
@@ -45,17 +45,18 @@ public class Login extends JFrame implements ActionListener {
         t2.setBounds(200, 140, 200, 30);
         add(t2);
 
-        // Buttons
+        // Login Button
         b1 = new JButton("Login");
-        b1.setBounds(80, 200, 120, 35);
+        b1.setBounds(80, 200, 120, 40);
         b1.setBackground(new Color(0, 102, 204));
         b1.setForeground(Color.WHITE);
         b1.setFont(new Font("SansSerif", Font.BOLD, 14));
         b1.addActionListener(this);
         add(b1);
 
-        b2 = new JButton("Cancel");
-        b2.setBounds(260, 200, 120, 35);
+        // Cancel Button
+        b2 = new JButton("Back");
+        b2.setBounds(260, 200, 120, 40);
         b2.setBackground(Color.GRAY);
         b2.setForeground(Color.WHITE);
         b2.setFont(new Font("SansSerif", Font.BOLD, 14));
@@ -97,10 +98,10 @@ public class Login extends JFrame implements ActionListener {
                 if (rs.next()) {
                     int userId = rs.getInt("user_id");
                     String userName = rs.getString("name");
-                    new Home(userId,userName ).setVisible(true);
+                    new Home(userId, userName).setVisible(true);
                     setVisible(false);
                 } else {
-                    JOptionPane.showMessageDialog(null, "Invalid login");
+                    JOptionPane.showMessageDialog(this, "Invalid login");
                 }
 
             } catch (SQLException e) {
@@ -109,40 +110,96 @@ public class Login extends JFrame implements ActionListener {
             }
 
         } else if (ae.getSource() == b2) { // Cancel
-            System.exit(0);
+            setVisible(false);
+            new Register().setVisible(true); // redirect to main/welcome page
+        }
+        else if (ae.getSource() == forgotButton) { // Forgot Password
+        String email = JOptionPane.showInputDialog(
+                this,
+                "Enter your email:",
+                "Forgot Password",
+                JOptionPane.INFORMATION_MESSAGE
+        );
 
-        } else if (ae.getSource() == forgotButton) { // Forgot Password
-            String email = JOptionPane.showInputDialog(
-                    this,                     // parent component
-                    "Enter your email:",       // message
-                    "Forgot Password",         // dialog title
-                    JOptionPane.INFORMATION_MESSAGE  // message type (can also be WARNING_MESSAGE, etc.)
-            );
-            if (email != null && !email.isEmpty()) {
-                try (Connection con = Connect_Db.getConnection();
-                     PreparedStatement pst = con.prepareStatement("SELECT * FROM users WHERE email=?")) {
-                    pst.setString(1, email);
-                    ResultSet rs = pst.executeQuery();
-                    if (rs.next()) {
-                        String newPass = JOptionPane.showInputDialog(this, "Enter new password:");
-                        if (newPass != null && !newPass.isEmpty()) {
-                            PreparedStatement updatePst = con.prepareStatement(
-                                    "UPDATE users SET password_hash=? WHERE email=?");
-                            updatePst.setString(1, newPass);
-                            updatePst.setString(2, email);
-                            updatePst.executeUpdate();
-                            JOptionPane.showMessageDialog(this, "Password updated successfully!");
+        if (email != null && !email.isEmpty()) {
+            try (Connection con = Connect_Db.getConnection();
+                 PreparedStatement pst = con.prepareStatement("SELECT * FROM users WHERE email=?")) {
+
+                pst.setString(1, email);
+                ResultSet rs = pst.executeQuery();
+
+                if (rs.next()) {
+                    // 1. Generate secure token
+                    String token = SecurityUtils.generateNewToken();
+
+                    // 2. Set token expiry (15 minutes from now)
+                    long expiryMillis = System.currentTimeMillis() + 15 * 60 * 1000; // 15 minutes
+                    Timestamp expiryTime = new Timestamp(expiryMillis);
+
+                    // 3. Store token and expiry in DB
+                    PreparedStatement updatePst = con.prepareStatement(
+                            "UPDATE users SET reset_token=?, reset_token_expiry=? WHERE email=?"
+                    );
+                    updatePst.setString(1, token);
+                    updatePst.setTimestamp(2, expiryTime);
+                    updatePst.setString(3, email);
+                    updatePst.executeUpdate();
+
+                    // 4. Send token via email
+                    String subject = "Your Password Reset Token";
+                    String body = "Use the following token to reset your password (valid for 15 minutes):\n\n" + token;
+                    EmailUtils.sendEmail(email, subject, body);
+
+                    JOptionPane.showMessageDialog(this, "A reset token has been sent to your email.");
+
+                    // 5. Ask user for token and new password
+                    String inputToken = JOptionPane.showInputDialog(this, "Enter the token you received:");
+                    if (inputToken != null && !inputToken.isEmpty()) {
+
+                        // Verify token and expiry
+                        PreparedStatement verifyPst = con.prepareStatement(
+                                "SELECT reset_token, reset_token_expiry FROM users WHERE email=?"
+                        );
+                        verifyPst.setString(1, email);
+                        ResultSet verifyRs = verifyPst.executeQuery();
+                        if (verifyRs.next()) {
+                            String tokenInDB = verifyRs.getString("reset_token");
+                            Timestamp expiry = verifyRs.getTimestamp("reset_token_expiry");
+
+                            if (tokenInDB.equals(inputToken) && expiry.after(new Timestamp(System.currentTimeMillis()))) {
+                                String newPass = JOptionPane.showInputDialog(this, "Enter your new password:");
+                                if (newPass != null && !newPass.isEmpty()) {
+                                    PreparedStatement resetPst = con.prepareStatement(
+                                            "UPDATE users SET password_hash=?, reset_token=NULL, reset_token_expiry=NULL WHERE email=?"
+                                    );
+                                    resetPst.setString(1, newPass);
+                                    resetPst.setString(2, email);
+                                    resetPst.executeUpdate();
+
+                                    JOptionPane.showMessageDialog(this, "Password updated successfully!");
+                                }
+                            } else {
+                                JOptionPane.showMessageDialog(this, "Invalid or expired token. Password not changed.");
+                            }
                         }
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Email not found.");
                     }
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(this, "Database error: " + ex.getMessage());
+
+                } else {
+                    JOptionPane.showMessageDialog(this, "Email not found.");
                 }
+
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Database error: " + ex.getMessage());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error sending email: " + ex.getMessage());
             }
         }
     }
+
+
+}
 
     public static void main(String[] args) {
         new Login();

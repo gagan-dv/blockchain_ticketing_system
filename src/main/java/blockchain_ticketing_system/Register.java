@@ -18,9 +18,10 @@ public class Register extends JFrame implements ActionListener {
     }
 
     public Register() {
-        setTitle("Create Account");
+
         setBounds(600, 200, 500, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
 
         contentPane = new JPanel();
         contentPane.setBackground(Color.WHITE);
@@ -30,14 +31,14 @@ public class Register extends JFrame implements ActionListener {
 
         // Title
         JLabel titleLabel = new JLabel("Create Your Account");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
+        titleLabel.setFont(new Font("Poppins", Font.BOLD, 22));
         titleLabel.setForeground(new Color(0, 102, 204));
         titleLabel.setBounds(120, 20, 300, 30);
         contentPane.add(titleLabel);
 
         // Email
         JLabel lblEmail = new JLabel("Email:");
-        lblEmail.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        lblEmail.setFont(new Font("Poppins", Font.PLAIN, 14));
         lblEmail.setBounds(50, 80, 100, 25);
         contentPane.add(lblEmail);
 
@@ -47,7 +48,7 @@ public class Register extends JFrame implements ActionListener {
 
         // Name
         JLabel lblName = new JLabel("Name:");
-        lblName.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        lblName.setFont(new Font("Poppins", Font.PLAIN, 14));
         lblName.setBounds(50, 120, 100, 25);
         contentPane.add(lblName);
 
@@ -57,7 +58,7 @@ public class Register extends JFrame implements ActionListener {
 
         // Password
         JLabel lblPassword = new JLabel("Password:");
-        lblPassword.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        lblPassword.setFont(new Font("Poppins", Font.PLAIN, 14));
         lblPassword.setBounds(50, 160, 100, 25);
         contentPane.add(lblPassword);
 
@@ -70,17 +71,30 @@ public class Register extends JFrame implements ActionListener {
         createButton.setBounds(100, 250, 120, 35);
         createButton.setBackground(new Color(0, 102, 204));
         createButton.setForeground(Color.WHITE);
-        createButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        createButton.setFont(new Font("Poppins Black Italic", Font.BOLD, 14));
         createButton.addActionListener(this);
         contentPane.add(createButton);
 
-        backButton = new JButton("Back");
+        backButton = new JButton("Exit");
         backButton.setBounds(260, 250, 120, 35);
         backButton.setBackground(Color.GRAY);
         backButton.setForeground(Color.WHITE);
-        backButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        backButton.setFont(new Font("Poppins Black Italic", Font.BOLD, 14));
         backButton.addActionListener(this);
         contentPane.add(backButton);
+
+        JLabel loginLabel = new JLabel();
+        loginLabel.setText("<html><center>Already have an account?<br>Login</center></html>");
+        loginLabel.setForeground(new Color(0, 102, 204));
+        loginLabel.setBounds(150, 320, 200, 30);
+        loginLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        loginLabel.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                new Login().setVisible(true);
+                setVisible(false);
+            }
+        });
+        add(loginLabel);
 
         // Panel border
         JPanel panel = new JPanel();
@@ -89,6 +103,8 @@ public class Register extends JFrame implements ActionListener {
                 TitledBorder.LEADING, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 16), new Color(0, 102, 204)));
         panel.setBackground(Color.WHITE);
         contentPane.add(panel);
+
+
     }
 
     @Override
@@ -96,10 +112,10 @@ public class Register extends JFrame implements ActionListener {
         if (e.getSource() == createButton) {
             createAccount();
         } else if (e.getSource() == backButton) {
-            this.setVisible(false);
-            new Login().setVisible(true);
+                System.exit(0);
         }
     }
+
 
     private void createAccount() {
         String email = emailField.getText().trim();
