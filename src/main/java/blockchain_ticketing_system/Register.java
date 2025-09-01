@@ -71,7 +71,7 @@ public class Register extends JFrame implements ActionListener {
         createButton.setBounds(100, 250, 120, 35);
         createButton.setBackground(new Color(0, 102, 204));
         createButton.setForeground(Color.WHITE);
-        createButton.setFont(new Font("Poppins Black Italic", Font.BOLD, 14));
+        createButton.setFont(new Font("Poppins", Font.BOLD, 16));
         createButton.addActionListener(this);
         contentPane.add(createButton);
 
@@ -79,7 +79,7 @@ public class Register extends JFrame implements ActionListener {
         backButton.setBounds(260, 250, 120, 35);
         backButton.setBackground(Color.GRAY);
         backButton.setForeground(Color.WHITE);
-        backButton.setFont(new Font("Poppins Black Italic", Font.BOLD, 14));
+        backButton.setFont(new Font("Poppins", Font.BOLD, 16));
         backButton.addActionListener(this);
         contentPane.add(backButton);
 

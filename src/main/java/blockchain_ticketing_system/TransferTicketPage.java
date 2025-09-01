@@ -15,7 +15,7 @@ public class TransferTicketPage extends JFrame {
     private String userName;
 
     public TransferTicketPage(int userId, String userName) {
-        super("Transfer Ticket");
+        super("");
         this.userId = userId;
         this.userName = userName;
         initialize();
@@ -30,9 +30,9 @@ public class TransferTicketPage extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         JLabel titleLabel = new JLabel("Your Tickets");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 26));
+        titleLabel.setFont(new Font("Poppins Bold", Font.BOLD, 26));
         titleLabel.setForeground(new Color(0, 102, 204));
-        titleLabel.setBounds(300, 20, 300, 30);
+        titleLabel.setBounds(380, 20, 300, 30);
         getContentPane().add(titleLabel);
 
         // JTable for user's tickets
@@ -122,13 +122,29 @@ public class TransferTicketPage extends JFrame {
             pstUpdate.setInt(2, ticketId);
             pstUpdate.executeUpdate();
 
-            // Record blockchain transaction (placeholder)
-            String insertBlock = "INSERT INTO blockchain (prev_hash, transaction_data, block_hash) VALUES (?, ?, ?)";
+            // inside TransferTicketPage.transferTicket() after updating the ticket owner:
+
+// --- Blockchain hashing starts here (use same Timestamp) ---
+            String prevHash = "0"; // default for first block
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT block_hash FROM blockchain ORDER BY block_id DESC LIMIT 1");
+            if (rs.next()) prevHash = rs.getString("block_hash");
+
+            String transactionData = "User " + userName + " transferred ticket " + ticketId +
+                    " for event " + eventName + " to " + recipientName;
+
+            Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
+            String blockHash = StringUtil.applySha256(prevHash + transactionData + currentTimestamp.getTime());
+
+            String insertBlock = "INSERT INTO blockchain (prev_hash, transaction_data, block_hash, timestamp) VALUES (?, ?, ?, ?)";
             PreparedStatement pstBlock = conn.prepareStatement(insertBlock);
-            pstBlock.setString(1, "previous_hash_placeholder");
-            pstBlock.setString(2, "User " + userName + " transferred ticket " + ticketId + " for event " + eventName + " to " + recipientName);
-            pstBlock.setString(3, "hash_placeholder");
+            pstBlock.setString(1, prevHash);
+            pstBlock.setString(2, transactionData);
+            pstBlock.setString(3, blockHash);
+            pstBlock.setTimestamp(4, currentTimestamp);
             pstBlock.executeUpdate();
+// --- end blockchain ---
+
 
             JOptionPane.showMessageDialog(this, "Ticket transferred successfully to " + recipientName);
             loadUserTickets(); // Refresh table
@@ -138,6 +154,7 @@ public class TransferTicketPage extends JFrame {
             JOptionPane.showMessageDialog(this, "Error transferring ticket: " + ex.getMessage());
         }
     }
+
 
     public static void main(String[] args) {
         new TransferTicketPage(1, "TestUser"); // Example
