@@ -22,7 +22,7 @@ public class Login extends JFrame implements ActionListener {
 
         // Title
         titleLabel = new JLabel("Blockchain Ticketing Login", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
+        titleLabel.setFont(new Font("Poppins", Font.BOLD, 22));
         titleLabel.setForeground(new Color(0, 102, 204));
         titleLabel.setBounds(50, 20, 400, 40);
         add(titleLabel);
@@ -50,7 +50,7 @@ public class Login extends JFrame implements ActionListener {
         b1.setBounds(80, 200, 120, 40);
         b1.setBackground(new Color(0, 102, 204));
         b1.setForeground(Color.WHITE);
-        b1.setFont(new Font("SansSerif", Font.BOLD, 14));
+        b1.setFont(new Font("Poppins", Font.BOLD, 14));
         b1.addActionListener(this);
         add(b1);
 
@@ -59,7 +59,7 @@ public class Login extends JFrame implements ActionListener {
         b2.setBounds(260, 200, 120, 40);
         b2.setBackground(Color.GRAY);
         b2.setForeground(Color.WHITE);
-        b2.setFont(new Font("SansSerif", Font.BOLD, 14));
+        b2.setFont(new Font("Poppins", Font.BOLD, 14));
         b2.addActionListener(this);
         add(b2);
 
@@ -69,7 +69,7 @@ public class Login extends JFrame implements ActionListener {
         forgotButton.setBackground(Color.WHITE);
         forgotButton.setForeground(new Color(0, 102, 204));
         forgotButton.setBorderPainted(false);
-        forgotButton.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        forgotButton.setFont(new Font("Poppins", Font.PLAIN, 12));
         forgotButton.addActionListener(this);
         add(forgotButton);
 
